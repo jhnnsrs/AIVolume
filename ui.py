@@ -42,7 +42,8 @@ class ImageWindow(QMainWindow):
         self.flagsText.setText(self.ais.flags)
         self.fileEdit.setText(Global.filepath.split("/")[-1])
         self.indexEdit.setText(str(self.ais.index))
-        self.sobelx = logic.getSobel(self.ais.image, Global.b4channel)
+
+        self.sobelx = logic.getSobel(self.ais.image, self.ais.b4channel)
         self.linelist = logic.getLineListSobel(self.sobelx)
 
         self.axes[0].set_ylim(0, self.sobelx.shape[0])

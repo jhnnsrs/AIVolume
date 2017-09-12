@@ -13,5 +13,5 @@ class AreaROI:
         self.length = None
         self.diameter = None
         self.volume = None
-
+        self.b4channel = None
 

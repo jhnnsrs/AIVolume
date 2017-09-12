@@ -34,6 +34,7 @@ def getAIS(mypath):
                             newroi.image = np.array(lala["Data/" + roi + "/Image"])
                             newroi.flags = str(lala["Data/" + roi].attrs["Flags"])
                             newroi.index = int(lala["Data/" + roi].attrs["index"])
+                            newroi.b4channel = int(lala["Data/" + roi].attrs["B4-Channel"])
                             newroi.voxelsize = lala.attrs["physicalsizex"]
                             newroi.key = roi
                             print(newroi.flags)
