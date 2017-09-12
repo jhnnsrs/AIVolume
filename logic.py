@@ -1,25 +1,54 @@
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import copy
 import os
 from os.path import join
 
 from settings import Global
-from elements import AreaROI, AreaData
+from elements import AreaROI
 
+def getAIS(mypath):
 
-def getAIS(mypath) :
-    jpglist = []
-    mypath = "Tests"
+    aish5list = []
+    h5filelist = []
     for root, subdirs, files in os.walk(mypath):
-        jpgfiles= [join(root, f) for f in files if f.endswith(".jpg")]
-        jpglist += jpgfiles
+        h5file = [join(root, f) for f in files if f.endswith(".h5")]
+        h5filelist += h5file
 
-    jpgs = []
-    for path in jpglist:
-        jpgs.append(plt.imread(path))
+    for h5file in h5filelist:
+        if h5py.is_hdf5(h5file):
+            with h5py.File(h5file, "r") as lala:
 
-    return jpgs
+                try:
+                    rois = [key for key in lala["Data"].keys()]
+                    for roi in rois:
+                        try:
+                            nana = lala["Data/" + roi + "/Physical"].attrs["Diameter"]
+                            print("FILE ", h5file, " already has a Diameter. Skipping")
+                        except KeyError as e:
+                            print("FILE ", h5file, " has no Diameter. Taking into account")
+                            newroi = AreaROI()
+                            newroi.length = float(lala["Data/" + roi + "/Physical"].attrs["AISPhysicalLength"])
+                            newroi.image = np.array(lala["Data/" + roi + "/Image"])
+                            newroi.flags = str(lala["Data/" + roi].attrs["Flags"])
+                            newroi.index = int(lala["Data/" + roi].attrs["index"])
+                            newroi.voxelsize = lala.attrs["physicalsizex"]
+                            newroi.key = roi
+                            print(newroi.flags)
+                            # should only add the ones that are not already set
+                            aish5list.append([newroi,h5file])
+                except KeyError as e:
+                    print("File {0} doesnt hava data Object: {1}".format(h5file, e))
+                    pass
+
+        else:
+            print("File " + h5file + " doesn't conform with h5 standards")
+            pass
+
+
+    return aish5list
 
 
 def getSobel(image,b4channel=Global.b4channel):
@@ -43,7 +72,7 @@ def getLineListSobel(sobelx):
     return linelist
 
 
-def calculateVolume(roi: AreaROI):
+def calculateDiameterAndVolume(roi: AreaROI):
     # in pixel right now
 
     linelengths = []
@@ -54,9 +83,10 @@ def calculateVolume(roi: AreaROI):
     lengthmeans = []
     for startx, starty in roi.sections:
         sectionmean = np.mean(linelengths[int(startx):int(starty)])
-        print(sectionmean)
         lengthmeans.append(sectionmean)
 
-    volume = np.math.pi * np.mean(lengthmeans)**2 * roi.length
-    print(volume)
-    return volume
+    diameter = np.mean(lengthmeans) * roi.voxelsize
+    volume = np.math.pi * diameter ** 2 * roi.length
+    print("Volume: ",volume)
+    print("Diameter: ",diameter)
+    return diameter, volume

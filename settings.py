@@ -1,5 +1,6 @@
 class Global:
 
-    filepath = "Tests"
+    windowtitle = "AIVolume"
+    filepath = None
     b4channel = 0
     imageWindow = None
